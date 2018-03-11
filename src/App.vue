@@ -1,17 +1,16 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <Containers></Containers>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Containers from './components/Containers.vue'
 
 export default {
   name: 'app',
   components: {
-    HelloWorld
+    Containers
   }
 }
 </script>
@@ -24,5 +23,9 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+.row {
+  float: left;
 }
 </style>
