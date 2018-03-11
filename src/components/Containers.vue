@@ -1,13 +1,16 @@
 <template>
-  <div>
+  <div class="containers">
     <SingleContainer
-        :waterLevel="containerALvl"
+        :waterLevel="containerA.level"
         container-name="A"
+        :distance-to-bottom="containerA.distance"
         v-on:addLiquid="addLiquidToContainer">
     </SingleContainer>
+    <Channel :level="channelLvl"></Channel>
     <SingleContainer
-        :waterLevel="containerBLvl"
+        :waterLevel="containerB.level"
         container-name="B"
+        :distance-to-bottom="containerB.distance"
         v-on:addLiquid="addLiquidToContainer">
     </SingleContainer>
   </div>
@@ -15,32 +18,114 @@
 
 <script>
   import SingleContainer from './SingleContainer.vue'
+  import Channel from './Channel.vue'
 
   const stepLenght = 20
-  const nameTovalueMap = {
-    A: 'containerALvl',
-    B: 'containerBLvl',
-  }
-
+  const maximunVolume = 100
 
   export default {
     name: 'Containers',
     data: function () {
       return {
-        containerALvl: 20,
-        containerBLvl: 20,
+        containerA: {
+          level: 0,
+          distance: 1,
+        },
+        containerB: {
+          level: 20,
+          distance: 2,
+        },
+        channelLvl: 0,
       }
     },
     methods: {
       addLiquidToContainer: function (payload) {
         const { containerName } = payload
-        const containerValue = nameTovalueMap[containerName]
 
-        this[containerValue] += stepLenght;
+        switch (containerName) {
+          case 'A':
+            this.distribute(this.containerA, this.containerB);
+            break;
+          case 'B':
+            this.distribute(this.containerB, this.containerA);
+            break;
+          default:
+            throw 'Container does not exist'
+        }
+      },
+      distribute: function (movingContainer, staticContainer) {
+        if (movingContainer >= maximunVolume) {
+          return;
+        }
+
+        movingContainer.level += stepLenght;
+
+        if (this.isAboveChannel(movingContainer)) {
+          const waterAbove = this.getWaterAboveChannel(movingContainer);
+          const projection = { level: staticContainer.level + waterAbove, distance: staticContainer.distance }
+          const waterAboveProjection = this.getWaterAboveChannel(projection);
+
+          if (waterAboveProjection <= 0) {
+            // this is just to make a "nice" simulation
+            const volumeToDistrute = waterAbove / 2;
+            movingContainer.level -= volumeToDistrute
+            this.channelLvl += volumeToDistrute
+
+            window.setTimeout(function () {
+              movingContainer.level -= volumeToDistrute
+              this.channelLvl -= volumeToDistrute
+              staticContainer.level += waterAbove
+            }.bind(this), 300);
+          } else {
+            const avgToDistribute = waterAboveProjection / 3
+
+            if (!this.isChannelFull) {
+              movingContainer.level -= (avgToDistribute * 2)
+              this.channelLvl += avgToDistribute
+              staticContainer.level += avgToDistribute
+            }
+          }
+        }
+      },
+      isAboveChannel: function ({ level, distance }) {
+        const units = this.levelToUnit(level);
+
+        return units > distance
+      },
+      levelToUnit: function (level) {
+        return level / 20;
+      },
+      getWaterAboveChannel: function({ level, distance }) {
+        const unitsDiference =  this.levelToUnit(level) - distance;
+
+        return unitsDiference * 20 - this.channelLvl;
+      }
+    },
+    computed: {
+      isChannelFull: function () {
+        return this.channelLvl >= 20
       }
     },
     components: {
       SingleContainer,
+      Channel,
     }
   }
 </script>
+
+<style>
+  .liquid {
+    display: flex;
+    flex-direction: column-reverse;
+    width: 40px;
+    height: 100px;
+    background-color: blue;
+    transition: height 500ms;
+    z-index: 3;
+  }
+
+  .containers {
+    display: flex;
+    align-items: flex-end;
+  }
+</style>
