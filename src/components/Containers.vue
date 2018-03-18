@@ -1,30 +1,46 @@
 <template>
-  <div class="containers">
-    <SingleContainer
-        :waterLevel="containerA.level"
-        container-name="A"
-        :distance-to-bottom="containerA.distance"
-        v-on:addLiquid="addLiquidToContainer">
-    </SingleContainer>
-    <Channel :level="channelLvl"></Channel>
-    <SingleContainer
-        :waterLevel="containerB.level"
-        container-name="B"
-        :distance-to-bottom="containerB.distance"
-        v-on:addLiquid="addLiquidToContainer">
-    </SingleContainer>
+  <div>
+    <Camera />
+    <div class="containers">
+      <SingleContainer
+          v-if="shouldShow('A')"
+          :waterLevel="containerA.level"
+          container-name="A"
+          :distance-to-bottom="containerA.distance"
+          v-on:addLiquid="addLiquidToContainer">
+      </SingleContainer>
+      <Channel :level="channelLvl"></Channel>
+      <SingleContainer
+          v-if="shouldShow('B')"
+          :waterLevel="containerB.level"
+          container-name="B"
+          :distance-to-bottom="containerB.distance"
+          v-on:addLiquid="addLiquidToContainer">
+      </SingleContainer>
+    </div>
   </div>
 </template>
 
 <script>
   import SingleContainer from './SingleContainer.vue'
   import Channel from './Channel.vue'
+  import Camera from './Camera.vue'
+
+  import { EventBus, TOGGLE_CAM } from './EventBus';
 
   const stepLenght = 20
   const maximunVolume = 100
 
   export default {
     name: 'Containers',
+    mounted: function () {
+      EventBus.$on(TOGGLE_CAM, containerToShow => {
+        this.showContainer = containerToShow
+      })
+    },
+    beforeDestroy: function () {
+      EventBus.$off(TOGGLE_CAM)
+    },
     data: function () {
       return {
         containerA: {
@@ -36,6 +52,7 @@
           distance: 2,
         },
         channelLvl: 0,
+        showContainer: '',
       }
     },
     methods: {
@@ -99,7 +116,10 @@
         const unitsDiference =  this.levelToUnit(level) - distance;
 
         return unitsDiference * 20 - this.channelLvl;
-      }
+      },
+      shouldShow(containerName = '') {
+        return this.showContainer === '' || containerName === this.showContainer;
+      },
     },
     computed: {
       isChannelFull: function () {
@@ -109,6 +129,7 @@
     components: {
       SingleContainer,
       Channel,
+      Camera,
     }
   }
 </script>
