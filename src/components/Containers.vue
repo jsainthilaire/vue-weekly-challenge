@@ -1,22 +1,28 @@
 <template>
   <div>
     <Camera />
+    <div>
+      <button @click="addLiquidToContainer(containerA.name)">+ {{ containerA.name }}</button>
+      <button @click="addLiquidToContainer(containerB.name)">+ {{ containerB.name }}</button>
+    </div>
     <div class="containers">
       <SingleContainer
-          v-if="shouldShow('A')"
+          v-if="shouldShow(containerA.name)"
           :waterLevel="containerA.level"
-          container-name="A"
+          container-name="containerA.name"
           :distance-to-bottom="containerA.distance"
           v-on:addLiquid="addLiquidToContainer">
       </SingleContainer>
       <Channel :level="channelLvl"></Channel>
+      <keep-alive>
       <SingleContainer
-          v-if="shouldShow('B')"
+          v-if="shouldShow(containerB.name)"
           :waterLevel="containerB.level"
-          container-name="B"
+          container-name="containerB.name"
           :distance-to-bottom="containerB.distance"
           v-on:addLiquid="addLiquidToContainer">
       </SingleContainer>
+        </keep-alive>
     </div>
   </div>
 </template>
@@ -46,19 +52,19 @@
         containerA: {
           level: 0,
           distance: 1,
+          name: 'A',
         },
         containerB: {
           level: 20,
           distance: 2,
+          name: 'B',
         },
         channelLvl: 0,
         showContainer: '',
       }
     },
     methods: {
-      addLiquidToContainer: function (payload) {
-        const { containerName } = payload
-
+      addLiquidToContainer: function (containerName = '') {
         switch (containerName) {
           case 'A':
             this.distribute(this.containerA, this.containerB);
@@ -92,7 +98,7 @@
               movingContainer.level -= volumeToDistrute
               this.channelLvl -= volumeToDistrute
               staticContainer.level += waterAbove
-            }.bind(this), 300);
+            }.bind(this), 100);
           } else {
             const avgToDistribute = waterAboveProjection / 3
 
@@ -141,7 +147,6 @@
     width: 40px;
     height: 100px;
     background-color: blue;
-    transition: height 500ms;
     z-index: 3;
   }
 

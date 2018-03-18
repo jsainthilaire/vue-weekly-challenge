@@ -1,6 +1,5 @@
 <template>
   <section class="row">
-    <button @click="addLiquid">+ {{ containerName }}</button>
     <div class="container" :style="{ marginBottom: containerDistanceToBottom }">
       <div class="liquid" :style="{ height: waterLevel + '%' }"></div>
     </div>
@@ -15,18 +14,9 @@
         type: Number,
         default: 0,
       },
-      containerName: {
-        type: String,
-        required: true,
-      },
       distanceToBottom: {
         type: Number,
         default: 0,
-      }
-    },
-    methods: {
-      addLiquid: function () {
-        this.$emit('addLiquid', { containerName: this.containerName })
       }
     },
     computed: {
